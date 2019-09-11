@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+
+<style>
+
+html, body, div, span, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+table, caption, tbody, tfoot, thead, tr, th, td {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.slideshow-image {
+  display: block;
+}
+
+body {
+  background-color: black;
+}
+
+</style>
+
+<!--
+<image src="getImage?album=TEST&file=images/IMG_4691.JPG&width=150&height=350"></image>
+<image src="getImage?album=PHOTOS&file=2010/2010-05-09 Albany Tulips Festival/IMG_4691.JPG&width=150&height=350"></image>
+-->
+
+<div id='content'></div>
+
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script src="slideshow.js"></script>
+
+<script>
+
+var images = [
+  {album: "TEST", file:"images/DSC04487.JPG", aspectRatio: 1280/960},
+  {album: "TEST", file:"images/IMG_20171225_200624~2.jpg", aspectRatio: 2400/3200},
+  {album: "TEST", file:"images/IMG_20171225_200639~2.jpg", aspectRatio: 2400/3200},
+  {album: "TEST", file:"images/IMG_4691.JPG", aspectRatio: 2592/1944},
+  {album: "TEST", file:"images/IMG_9055.JPG", aspectRatio: 3456/2304},
+  {album: "TEST", file:"images/small.jpg", aspectRatio: 150/113}
+];
+
+var slideshow = photos.slideshow().duration(6).loop(true);
+
+var slideshowDiv = d3.select("#content")
+  .append("div")
+    .attr("id", "slideshow")
+  .call(slideshow, images);
+
+</script>
