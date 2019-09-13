@@ -3,17 +3,15 @@ var photos = photos || {};
 
 photos.slideshow = function(){
 
-  var fadein=1, fadeout=1, duration=3, legend=true, i=0, loop=false, autoPlay=true;
+  var fadein=1, fadeout=1, duration=3, legend=true, i=0, loop=false, autoPlay=true, startFrom;
   var slideshowDiv, slideshowTimer, screenWidth, screenHeight, newScreenWidth, newScreenHeight,
-    totalContent, canvas, context;
+    state = {};
   
-  function my(selection, images){
+  function my(selection, slideshowItems){
     screenWidth=document.documentElement.clientWidth;
     screenHeight=document.documentElement.clientHeight;
 
     newScreenWidth=screenWidth; newScreenHeight=screenHeight;
-
-    totalContent = images.length-1;
 
     document.addEventListener("keydown", function(event) {
       console.log(event.keyCode);
@@ -25,37 +23,42 @@ photos.slideshow = function(){
 
     });
 
+    state.slideshowItems = slideshowItems;
+    state.totalContent = slideshowItems.length-1;
+    state.contentPointer = startFrom-1 || -1;
+    state.paused = false;
+    
     selection.each(function(){
 
       slideshowDiv = d3.select(this);
 
-      playShow();
+      showContent();
 
     });
   
   }
 
-  function playShow() {
-    if(i>totalContent && loop){
-      i = 0;
-    }
-
-    if(i<=totalContent){
+  function showContent() {
+    
+    // advance pointer
+    state.contentPointer = (state.contentPointer+1 > state.totalContent) ? 
+      (loop ? 0 : undefined) : 
+      ++state.contentPointer;
+    
+    if(!isNaN(state.contentPointer)){
       // check for window resize
       if(screenWidth!=newScreenWidth || screenHeight!=newScreenHeight){
         screenWidth=newScreenWidth;
         screenHeight=newScreenHeight;
       }
-      showImage(images[i]);
+      showImage(state.slideshowItems[state.contentPointer]);
 
-      //showImage(images[i].album, images[i].file)
       if(autoPlay){
-        slideshowTimer = setTimeout(playShow, duration*1000);
+        slideshowTimer = setTimeout(showContent, duration*1000);
       }
     } else {
-      console.log("no more images...");
+      console.log("no more content...");
     }
-    i++;
   }
 
   
@@ -142,7 +145,7 @@ photos.slideshow = function(){
   }
 
   my.startFrom = function(_){
-    return arguments.length ? (i =_, my) : (i > images.length ? 0 : i);
+    return arguments.length ? (startFrom =_, my) : startFrom;
   }
 
   my.loop = function(_){
@@ -157,38 +160,63 @@ photos.slideshow = function(){
   my.pause = function(){
     if(slideshowTimer){
       console.log("pausing .. "+slideshowTimer);
+      
       clearTimeout(slideshowTimer);
+      state.paused = true;
+      
       console.log("paused");
     }
   }
 
   my.resume = function(){
-    i--; playShow();
+    if(state.paused){
+      --state.contentPointer;
+      state.paused=false;
+      showContent();
+    }
   }
 
   my.restart = function(){
-    i = 0;
-    playShow();
+    state.contentPointer = -1;
+    showContent();
   }
 
   my.next = function(){
     if(slideshowTimer){
       clearTimeout(slideshowTimer);
     }
-    // i is already incremented
-    playShow();
+    // contentPointer is incremented in showContent
+    showContent();
   }
 
   my.previous = function(){
     if(slideshowTimer){
       clearTimeout(slideshowTimer);
     }
-    i=i-2; // rewind by 2 slots
-    playShow();
+    
+    // rewind by 2 slots
+    if(state.contentPointer==1){
+      if(loop){
+        state.contentPointer=state.totalContent;
+      } else {
+        state.contentPointer=undefined;
+      }
+      
+    } else if (state.contentPointer==0){
+      if(loop){
+        state.contentPointer=state.totalContent-1;
+      } else {
+        state.contentPointer=undefined;
+      }
+    } else {
+      state.contentPointer=state.contentPointer-2; 
+    }
+    
+    showContent();
   }
 
   my.currentPosition = function(){
-    return i-1;
+    return state.contentPointer;
   }
 
   return my;
