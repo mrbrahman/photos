@@ -53,7 +53,7 @@ photos.slideshow = function(){
       }
       showImage(state.slideshowItems[state.contentPointer]);
 
-      if(autoPlay){
+      if(autoPlay && !state.paused){
         slideshowTimer = setTimeout(showContent, duration*1000);
       }
     } else {
@@ -90,7 +90,10 @@ photos.slideshow = function(){
 
     }
 
-    slideshowDiv.selectAll("*").remove();
+    slideshowDiv.selectAll("*")
+      .transition(d3.transition().duration(fadeout*1000))
+        .style("opacity", 0)
+      .remove();
 
     var imageDiv = slideshowDiv.append("div")
       .attr("style", `position: absolute; top: ${topPixels}px; left: ${leftPixels}px`)
@@ -101,12 +104,20 @@ photos.slideshow = function(){
       .attr("src", `getImage?album=${image.album}&file=${image.file}&width=${screenWidth}&height=${screenHeight}`)
       .attr("width", imageWidth)
       .attr("height", imageHeight)
+      .style("opacity", 0)
+      .transition(d3.transition().duration(fadein*1000))
+        .style("opacity", 1)
     ;
 
     if(legend){
-      slideshowDiv.append("p")
-        .attr("style", "font: 15px arial, sans-serif; color: White;")
-        .html(image.file)
+      slideshowDiv.append("div")
+        .attr("style", "position: absolute; top:10px; left:10px")
+        .append("p")
+          .attr("style", "font: 14px arial, sans-serif; color: White;")
+          .html(image.file)
+          .style("opacity", 0)
+          .transition(d3.transition().duration(fadein*1000))
+            .style("opacity", 1)
     }
 
 
