@@ -39,6 +39,12 @@ photos.slideshow = function(){
   }
 
   function showContent() {
+    // remove prior stuff (if any)
+//     slideshowDiv.selectAll("*")
+//       .transition(d3.transition().duration(fadeout*1000))
+//         .style("opacity", 0)
+//       .remove()
+//     ;
     
     // advance pointer
     state.contentPointer = (state.contentPointer+1 > state.totalContent) ? 
@@ -61,14 +67,49 @@ photos.slideshow = function(){
             slideshowTimer = setTimeout(showContent, duration*1000);
           }
           break;
+          
         case "video":
           showVideo(thisItem);
+          break;
+        
+        case "audio":
+          showAudio(thisItem);
           break;
       }
 
     } else {
       console.log("no more content...");
+//       slideshowDiv.append("div")
+//         .attr("style", "position: absolute; top:20px; left: 30px; font: 14px arial, sans-serif; color: White;")
+//         .append("p")
+//           .attr("style", "display: block")
+//           .html("End of Slideshow!")
+//       ;
     }
+  }
+
+  function showAudio(audio){
+    // remove prior stuff
+    slideshowDiv.selectAll("*")
+      .transition(d3.transition().duration(fadeout*1000))
+        .style("opacity", 0)
+      .remove()
+    ;
+
+    slideshowDiv.append("audio")
+      .attr("class", "slideshow-audio")
+      .attr("controls", "")
+      .attr("autoplay", "")
+      .on("ended", function(){
+        if(autoPlay && !state.paused){
+          showContent()
+        }
+      })
+        .append("source")
+          .attr("src", `getFile?album=${audio.album}&file=${audio.file}`)
+          .attr("type", audio.mimetype)
+    ;
+
   }
 
   function showVideo(video){
@@ -76,23 +117,23 @@ photos.slideshow = function(){
     slideshowDiv.selectAll("*")
       .transition(d3.transition().duration(fadeout*1000))
         .style("opacity", 0)
-      .remove();
+      .remove()
+    ;
 
-    slideshowDiv
-      .append("video")
-        .attr("class", "slideshow-video")
-        .attr("width", document.documentElement.clientWidth)
-        .attr("height", document.documentElement.clientHeight-5)
-        .on("ended", function(){
-          if(autoPlay && !state.paused){
-            showContent()
-          }
-        })
-        .attr("controls", "")
-        .attr("autoplay", "")
-          .append("source")
-            .attr("src", `getVideo?album=${video.album}&file=${video.file}`)
-            .attr("type", video.mimetype)
+    slideshowDiv.append("video")
+      .attr("class", "slideshow-video")
+      .attr("width", document.documentElement.clientWidth)
+      .attr("height", document.documentElement.clientHeight-5)
+      .on("ended", function(){
+        if(autoPlay && !state.paused){
+          showContent()
+        }
+      })
+      .attr("controls", "")
+      .attr("autoplay", "")
+        .append("source")
+          .attr("src", `getFile?album=${video.album}&file=${video.file}`)
+          .attr("type", video.mimetype)
     ;
 
   }
