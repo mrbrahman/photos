@@ -119,21 +119,6 @@ photos.slideshow = function(){
           .transition(d3.transition().duration(fadein*1000))
             .style("opacity", 1)
     }
-
-
-//     d3.image(`getImage?album=${album}&file=${file}&width=${screenWidth}&height=${screenHeight}`)
-//     .then(function(image){
-//       //console.log(image.width + " " + image.height);
-      
-//       context.clearRect(0, 0, screenWidth, screenHeight);
-//       context.drawImage(image, (screenWidth-image.width)/2 , (screenHeight-image.height)/2);
-
-//       if(legend){
-//         context.fillStyle = "white";
-//         context.font = "1em Arial"
-//         context.fillText(file, 5, 25);
-//       }
-//     });
   }
 
     
@@ -148,10 +133,12 @@ photos.slideshow = function(){
   }
   
   my.duration = function(_){
+    // TODO: immediately affect
     return arguments.length ? (duration = +_, my) : duration;
   }
 
   my.legend = function(_){
+    // TODO: immediately affect
     return arguments.length ? (legend = _, my) : legend;
   }
 
@@ -210,7 +197,7 @@ photos.slideshow = function(){
       if(loop){
         state.contentPointer=state.totalContent;
       } else {
-        state.contentPointer=undefined;
+        state.contentPointer=-1;
       }
       
     } else if (state.contentPointer==0){
