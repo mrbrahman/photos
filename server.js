@@ -22,6 +22,12 @@ app.get('/getImage', (req, res) => {
   resize(albums[album]+"/"+file, width, height).pipe(res);
 });
 
+app.get('/getVideo', (req, res) => {
+  let {album, file} = req.query;
+
+  res.sendFile(albums[album]+"/"+file);
+})
+
 app.use(express.static('public'));
 
 app.listen(9000, ()=>{

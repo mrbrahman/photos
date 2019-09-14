@@ -51,14 +51,50 @@ photos.slideshow = function(){
         screenWidth=newScreenWidth;
         screenHeight=newScreenHeight;
       }
-      showImage(state.slideshowItems[state.contentPointer]);
+      
+      let thisItem = state.slideshowItems[state.contentPointer];
+      switch(thisItem.mimetype.split("/")[0]){
+        case "image": 
+          showImage(thisItem);
 
-      if(autoPlay && !state.paused){
-        slideshowTimer = setTimeout(showContent, duration*1000);
+          if(autoPlay && !state.paused){
+            slideshowTimer = setTimeout(showContent, duration*1000);
+          }
+          break;
+        case "video":
+          showVideo(thisItem);
+          break;
       }
+
     } else {
       console.log("no more content...");
     }
+  }
+
+  function showVideo(video){
+    // remove prior stuff
+    slideshowDiv.selectAll("*")
+      .transition(d3.transition().duration(fadeout*1000))
+        .style("opacity", 0)
+      .remove();
+
+    slideshowDiv
+      .append("video")
+        .attr("class", "slideshow-video")
+        .attr("width", document.documentElement.clientWidth)
+        .attr("height", document.documentElement.clientHeight-5)
+        .on("ended", function(){
+          if(autoPlay && !state.paused){
+            showContent()
+          }
+        })
+        .attr("controls", "")
+        .attr("autoplay", "")
+          .append("source")
+            .attr("src", `getVideo?album=${video.album}&file=${video.file}`)
+            .attr("type", video.mimetype)
+    ;
+
   }
 
   
@@ -90,6 +126,7 @@ photos.slideshow = function(){
 
     }
 
+    // remove prior stuff
     slideshowDiv.selectAll("*")
       .transition(d3.transition().duration(fadeout*1000))
         .style("opacity", 0)

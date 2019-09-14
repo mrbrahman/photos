@@ -10,7 +10,7 @@ table, caption, tbody, tfoot, thead, tr, th, td {
   border: 0;
 }
 
-.slideshow-image {
+.slideshow-image, .slideshow-video {
   display: block;
 }
 
@@ -32,20 +32,23 @@ body {
 
 <script>
 
-var images = [
-  {album: "TEST", file:"images/DSC04487.JPG", aspectRatio: 1280/960},
-  {album: "TEST", file:"images/IMG_20171225_200624~2.jpg", aspectRatio: 2400/3200},
-  {album: "TEST", file:"images/IMG_20171225_200639~2.jpg", aspectRatio: 2400/3200},
-  {album: "TEST", file:"images/IMG_4691.JPG", aspectRatio: 2592/1944},
-  {album: "TEST", file:"images/IMG_9055.JPG", aspectRatio: 3456/2304},
-  {album: "TEST", file:"images/small.jpg", aspectRatio: 150/113}
+var memories = [
+  {album: "TEST", file:"images/DSC04487.JPG", aspectRatio: 1280/960, mimetype: "image/jpeg"},
+  {album: "TEST", file:"images/20190203_174921 Abhinav Jumping 100 times.mp4", aspectRatio: 1280/960, mimetype: "video/mp4"},
+  {album: "TEST", file:"images/IMG_20171225_200624~2.jpg", aspectRatio: 2400/3200, mimetype: "image/jpeg"},
+  {album: "TEST", file:"images/IMG_20171225_200639~2.jpg", aspectRatio: 2400/3200, mimetype: "image/jpeg"},
+  {album: "TEST", file:"images/IMG_4691.JPG", aspectRatio: 2592/1944, mimetype: "image/jpeg"},
+  {album: "TEST", file:"images/IMG_9055.JPG", aspectRatio: 3456/2304, mimetype: "image/jpeg"},
+  {album: "TEST", file:"images/small.jpg", aspectRatio: 150/113, mimetype: "image/jpeg"},
+  {album: "TEST", file:"images/VID_20181231_223653 Abhinav with Hair Towel.mp4", aspectRatio: 1280/960, mimetype: "video/mp4"},
 ];
 
-var slideshow = photos.slideshow().duration(6).loop(true);
+var slideshow = photos.slideshow().duration(6).loop(false);
 
 var slideshowDiv = d3.select("#content")
   .append("div")
     .attr("id", "slideshow")
-  .call(slideshow, images);
+  .call(slideshow, memories)
+;
 
 </script>
