@@ -18,12 +18,16 @@ app.get('/getImage', (req, res) => {
   res.type(`image/${format || 'jpg'}`);
   res.set({
     "Content-Disposition": `inline;filename="${file.split(/\//).pop()}"`
-  })
+  });
+  
   resize(albums[album]+"/"+file, width, height).pipe(res);
 });
 
 app.get('/getFile', (req, res) => {
   let {album, file} = req.query;
+  res.set({
+    "Content-Disposition": `inline;filename="${file.split(/\//).pop()}"`
+  });
 
   res.sendFile(albums[album]+"/"+file);
 })
