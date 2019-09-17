@@ -1,41 +1,47 @@
 const dir = require('node-dir');
 const fs = require('fs');
 const Database = require('better-sqlite3');
-const db = new Database('meta.db', { verbose: console.log, autocommit: false });
+const db = new Database('meta.db', {  }); //verbose: console.log
 const exiftool = require("exiftool-vendored").exiftool;
 
-console.log("before calling exiftool");
+const util = require('util');
 
-exiftool
-  .version()
-  .then(version => console.log(`We're running ExifTool v${version}`))
-;
+// Only for first time use: Create table if not present
 
-exiftool
-  .read('/media/windows/PHOTOS/2013/2013-06-02 Bushkill-Stroudsburg-Saylorsburg/IMG_4076.JPG')
-  .then((tags /*: Tags */) => {
-    let t = tags.FileModifyDate;
-    let t1 = t.toDate().getTime()/1000;
-    console.log(t);
-    console.log(t1);
-    console.log(
-      `${tags.DateTimeOriginal}, Keywords: ${tags.Keywords}, Make: ${tags.Make}, Model: ${tags.Model}, Errors: ${tags.errors}`
-    )
-  })
-  .catch(err => console.error("Something terrible happened: ", err))
-  .finally(function(){
-    exiftool.end();
-  })
-;
+log("Starting");
 
+var stmt = db.prepare(`
+  create virtual table if not exists meta using fts5(
+    album, filename, filesize, ext, mimetype, keywords, faces, rating, imagesize, aspectratio,
+    make, model, orientation, datetimeoriginal, createdate, filemodifydate, filedate); 
+`);
 
-/*
+var info = stmt.run();
+
+//console.log(util.inspect(info));
+
+let albums= {
+  TEST: "/home/shreyas/Projects/test_images/images/",
+  PHOTOS_TEST: "/media/windows/PHOTOS/2019/",
+  PHOTOS: "/media/windows/PHOTOS/",
+  2018: "/media/windows/PHOTOS/2018/",
+  2017: "/media/windows/PHOTOS/2017/",
+  2016: "/media/windows/PHOTOS/2016/",
+  2015: "/media/windows/PHOTOS/2015/",
+  2014: "/media/windows/PHOTOS/2014/",
+  2013: "/media/windows/PHOTOS/2013/",
+  2012: "/media/windows/PHOTOS/2012/",
+  2011: "/media/windows/PHOTOS/2011/"
+}
+
+const album = "PHOTOS";
+
 function getFilesMtime(files){
   return new Promise((resolve,reject)=>{
     try {
       let stats = {};
       files.forEach(f=>{
-        stats[f.replace("/media/windows/PHOTOS/","")] = fs.statSync(f).mtime.getTime()/1000; // in Unix Epoch
+        stats[f.replace(albums[album],"")] = fs.statSync(f).mtime.getTime()/1000; // in Unix Epoch
       });
       resolve(stats);
     } catch(err){  // TODO: Doesn't seem to work
@@ -45,11 +51,11 @@ function getFilesMtime(files){
   })
 }
 
-var filesPromise = dir.promiseFiles('/media/windows/PHOTOS/2019')
+var filesPromise = dir.promiseFiles(albums[album])
   .then(getFilesMtime);
 
 
-var stmt = db.prepare("select filename, filemodifydate from metadata where album = ?");
+var stmt = db.prepare("select filename, filemodifydate from meta where album = ?");
 
 function getMetadata(album){
   return new Promise((resolve,reject)=>{
@@ -62,28 +68,134 @@ function getMetadata(album){
   })
 }
 
-var metaPromise = getMetadata('PHOTOS');
+var metaPromise = getMetadata(album);
+
+const deleteStmt = db.prepare("delete from meta where album = @album and filename = @filename");
+
+const deleteMany = db.transaction((records)=>{
+  for (const r of records) deleteStmt.run(r) 
+});
+
+const insertStmt = db.prepare("insert into meta ( \
+  album, filename, filesize, ext, mimetype, keywords, faces, rating, imagesize, aspectratio, \
+  make, model, orientation, datetimeoriginal, createdate, filemodifydate, filedate \
+) \
+values ( \
+  @album, @filename, @filesize, @ext, @mimetype, @keywords, @faces, @rating, @imagesize, @aspectratio, \
+  @make, @model, @orientation, @datetimeoriginal, @createdate, @filemodifydate, @filedate \
+)");
+
+const insertMany = db.transaction((records)=>{
+  for (const r of records) {
+    try{
+      insertStmt.run(r);
+    } catch(err) {
+      log(util.inspect(r));
+      log(err);
+      throw(err);
+    }
+  }
+});
 
 Promise.all([filesPromise, metaPromise])
 .then(function(values){
   let fs=values[0], meta=values[1], delta=[], removed=[];
-  console.log("fs "+Object.keys(fs).length + " meta "+Object.keys(meta).length);
+  log("fs "+Object.keys(fs).length + " meta "+Object.keys(meta).length);
   
   Object.keys(fs).forEach(f=>{
     if(fs[f] > (meta[f]||0)){
-      delta.push(f);
+      delta.push(albums[album]+f); // put the dir back, need full path for exiftool
     }
   });
   
   Object.keys(meta).forEach(f=>{
     if(!fs[f]){
-      removed.push(f);
+      removed.push(f);  // just the filename to be deleted
     }
   });
   
-  console.log("delta "+delta.length + " removed "+ removed.length);
-  console.log(removed);
+  log("delta "+delta.length + " removed "+ removed.length);
+  //console.log(delta);
+  //console.log(removed);
+
+  try{
+
+    // Remove records withoug files anymore
+    deleteMany(removed.map(r=>{
+      return {
+        album: album,
+        filename: r
+      }
+    }))
+
+
+    log("Starting Promises");
+    
+    var exifPromises = [];
+
+    delta.map(file=>{
+      var p = exiftool.read(file);
+      exifPromises.push(p);
+    });
+
+    Promise.all(exifPromises)
+    .then(promiseReturns=>{
+
+      log("All Promises Completed; Starting DELETE");
+
+      // first delete the record (if any)
+      deleteMany(promiseReturns.map(tags=>{
+        return { 
+          album: album,
+          filename: tags.Directory.replace(albums[album], "")+"/"+tags.FileName
+        }
+      }));
+
+      log("Starting INSERT");
+
+      // now, insert the new metadata
+      insertMany(promiseReturns.map(tags=>{
+
+        let imageSize = tags.ImageSize ? tags.ImageSize.split(/x/i) : "", 
+          aspectRatio = imageSize ? imageSize[0]/imageSize[1] : 0;
+
+        return {
+          album: album,
+          filename: tags.Directory.replace(albums[album], "")+"/"+tags.FileName,
+          filesize: tags.FileSize||"",
+          ext: tags.FileName.split(".").pop(),
+          mimetype: tags.MIMEType||"",
+          keywords: tags.Keywords ? ((typeof(tags.Keywords) == "string") ?  tags.Keywords : tags.Keywords.join(", ")) : "",
+          faces: tags.RegionInfo ? tags.RegionInfo.RegionList.map(d=>d.Name).join(", ") : "",
+          rating: tags.Rating||"",
+          imagesize: tags.ImageSize||"",
+          aspectratio: aspectRatio,
+          make: tags.Make||"",
+          model: tags.Model||"",
+          orientation: tags.Orientation||"",
+          datetimeoriginal: (tags.DateTimeOriginal||"").toString(),
+          createdate: (tags.CreateDate||"").toString(), 
+          filemodifydate: (tags.FileModifyDate||"").toString(),
+          filedate: (tags.DateTimeOriginal || tags.CreateDate || tags.FileModifyDate).toString()
+        }
+      }));
+
+    })
+    .catch(err=>{
+      log("PROMISE ERROR ${err}");
+     })
+    .finally(()=>{
+      exiftool.end();
+      log("In FINALLY block");
+
+     });
+  } catch(err){
+    console.error("ERROR: ", err)
+  }
   
 });
-*/
 
+function log(str){
+  var d = new Date(); 
+  console.log(`${d.getHours()}:${d.getMinutes()}:${d.getSeconds()} --> ${str}`);
+}
