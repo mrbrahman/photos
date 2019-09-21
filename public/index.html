@@ -14,9 +14,11 @@ table, caption, tbody, tfoot, thead, tr, th, td {
   display: block;
 }
 
+/*
 body {
   background-color: black;
 }
+*/
 
 </style>
 
@@ -25,31 +27,72 @@ body {
 <image src="getImage?album=PHOTOS&file=2010/2010-05-09 Albany Tulips Festival/IMG_4691.JPG&width=150&height=350"></image>
 -->
 
+
+<input type="text" id="search-box" name="search-box" required size="70">
+<button id="search-button" onclick="searchClicked()">Search</button>
+
+<div id='pig'></div>
+
 <div id='content'></div>
 
+<script src="pig.min.js"></script>
 <script src="https://d3js.org/d3.v5.min.js"></script>
 <script src="slideshow.js"></script>
 
 <script>
 
+var pigOptions = {
+  urlForSize: function(filename, size) {
+    return `/getThumbnail?album=PHOTOS&filename=${filename}&height=${size}`
+  },
+  onClickHander: function(filename) { console.log(filename); },
+};
+
+function searchClicked(){
+  let searchText = document.getElementById("search-box").value;
+  searchText = searchText
+    .replace(/([^"]+)|("[^"]+")/g, function($0, $1, $2) {
+      if ($1) {
+          return $1.replace(/\s/g, '&');
+      } else {
+          return $2; 
+      } 
+    });
+  console.log(searchText);
+
+  fetch("/search?"+searchText)
+  .then(function(response){
+    return response.json()
+  })
+  .then(function(result){
+    console.log(result.length);
+    var pig = new Pig(result, pigOptions).enable();
+  })
+}
+
 var memories = [
-  {album: "TEST", file:"images/DSC04487.JPG", aspectRatio: 1280/960, mimetype: "image/jpeg"},
-  {album: "TEST", file:"images/20190203_174921 Abhinav Jumping 100 times.mp4", aspectRatio: 1280/960, mimetype: "video/mp4"},
-  {album: "TEST", file:"images/IMG_20171225_200624~2.jpg", aspectRatio: 2400/3200, mimetype: "image/jpeg"},
-  {album: "TEST", file:"images/AfterMusicClass.mp3", aspectRatio: 2400/3200, mimetype: "audio/mpeg"},
-  {album: "TEST", file:"images/IMG_20171225_200639~2.jpg", aspectRatio: 2400/3200, mimetype: "image/jpeg"},
-  {album: "TEST", file:"images/IMG_4691.JPG", aspectRatio: 2592/1944, mimetype: "image/jpeg"},
-  {album: "TEST", file:"images/IMG_9055.JPG", aspectRatio: 3456/2304, mimetype: "image/jpeg"},
-  {album: "TEST", file:"images/small.jpg", aspectRatio: 150/113, mimetype: "image/jpeg"},
-  {album: "TEST", file:"images/VID_20181231_223653 Abhinav with Hair Towel.mp4", aspectRatio: 1280/960, mimetype: "video/mp4"},
+  {album: "TEST", filename:"images/DSC04487.JPG", aspectRatio: 1280/960, mimetype: "image/jpeg"},
+  //{album: "TEST", file:"images/20190203_174921 Abhinav Jumping 100 times.mp4", aspectRatio: 1280/960, mimetype: "video/mp4"},
+  {album: "TEST", filename:"images/IMG_20171225_200624~2.jpg", aspectRatio: 2400/3200, mimetype: "image/jpeg"},
+  //{album: "TEST", filename:"images/AfterMusicClass.mp3", aspectRatio: 2400/3200, mimetype: "audio/mpeg"},
+  {album: "TEST", filename:"images/IMG_20171225_200639~2.jpg", aspectRatio: 2400/3200, mimetype: "image/jpeg"},
+  {album: "TEST", filename:"images/IMG_4691.JPG", aspectRatio: 2592/1944, mimetype: "image/jpeg"},
+  {album: "TEST", filename:"images/IMG_9055.JPG", aspectRatio: 3456/2304, mimetype: "image/jpeg"},
+  {album: "TEST", filename:"images/small.jpg", aspectRatio: 150/113, mimetype: "image/jpeg"},
+  //{album: "TEST", file:"images/VID_20181231_223653 Abhinav with Hair Towel.mp4", aspectRatio: 1280/960, mimetype: "video/mp4"},
 ];
 
-var slideshow = photos.slideshow().duration(6).loop(false);
 
-var slideshowDiv = d3.select("#content")
-  .append("div")
-    .attr("id", "slideshow")
-  .call(slideshow, memories)
-;
+// var pig = new Pig(memories, pigOptions).enable();
+
+
+// var slideshow = photos.slideshow().duration(6).loop(false);
+
+// var slideshowDiv = d3.select("#content")
+//   .append("div")
+//     .attr("id", "slideshow")
+//   .call(slideshow, memories)
+// ;
+
 
 </script>

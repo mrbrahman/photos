@@ -67,7 +67,7 @@ photos.slideshow = function(){
             slideshowTimer = setTimeout(showContent, duration*1000);
           }
           break;
-          
+
         case "video":
           showVideo(thisItem);
           break;
@@ -98,6 +98,8 @@ photos.slideshow = function(){
 
     slideshowDiv.append("audio")
       .attr("class", "slideshow-audio")
+      .attr("width", document.documentElement.clientWidth)
+      .attr("height", document.documentElement.clientHeight)
       .attr("controls", "")
       .attr("autoplay", "")
       .on("ended", function(){
@@ -106,7 +108,7 @@ photos.slideshow = function(){
         }
       })
         .append("source")
-          .attr("src", `getFile?album=${audio.album}&file=${audio.file}`)
+          .attr("src", `getFile?album=${audio.album}&filename=${audio.filename}`)
           .attr("type", audio.mimetype)
     ;
 
@@ -123,7 +125,7 @@ photos.slideshow = function(){
     slideshowDiv.append("video")
       .attr("class", "slideshow-video")
       .attr("width", document.documentElement.clientWidth)
-      .attr("height", document.documentElement.clientHeight-5)
+      .attr("height", document.documentElement.clientHeight)
       .on("ended", function(){
         if(autoPlay && !state.paused){
           showContent()
@@ -132,7 +134,7 @@ photos.slideshow = function(){
       .attr("controls", "")
       .attr("autoplay", "")
         .append("source")
-          .attr("src", `getFile?album=${video.album}&file=${video.file}`)
+          .attr("src", `getFile?album=${video.album}&filename=${video.filename}`)
           .attr("type", video.mimetype)
     ;
 
@@ -179,7 +181,7 @@ photos.slideshow = function(){
 
     var img = imageDiv.append("img")
       .attr("class", "slideshow-image")
-      .attr("src", `getImage?album=${image.album}&file=${image.file}&width=${screenWidth}&height=${screenHeight}`)
+      .attr("src", `getImage?album=${image.album}&filename=${image.filename}&width=${screenWidth}&height=${screenHeight}`)
       .attr("width", imageWidth)
       .attr("height", imageHeight)
       .style("opacity", 0)
@@ -192,7 +194,7 @@ photos.slideshow = function(){
         .attr("style", "position: absolute; top:10px; left:10px")
         .append("p")
           .attr("style", "font: 14px arial, sans-serif; color: White;")
-          .html(image.file)
+          .html(image.filename)
           .style("opacity", 0)
           .transition(d3.transition().duration(fadein*1000))
             .style("opacity", 1)

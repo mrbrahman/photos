@@ -12,7 +12,7 @@ log("Starting");
 
 var stmt = db.prepare(`
   create virtual table if not exists meta using fts5(
-    album, filename, filesize, ext, mimetype, keywords, faces, rating, imagesize, aspectratio,
+    album, filename, folder, filesize, ext, mimetype, keywords, faces, rating, imagesize, aspectratio,
     make, model, orientation, datetimeoriginal, createdate, filemodifydate, filedate); 
 `);
 
@@ -34,7 +34,7 @@ let albums= {
   2011: "/media/windows/PHOTOS/2011/"
 }
 
-const album = "PHOTOS";
+const album = "TEST";
 
 function getFilesMtime(files){
   return new Promise((resolve,reject)=>{
@@ -77,11 +77,11 @@ const deleteMany = db.transaction((records)=>{
 });
 
 const insertStmt = db.prepare("insert into meta ( \
-  album, filename, filesize, ext, mimetype, keywords, faces, rating, imagesize, aspectratio, \
+  album, filename, folder, filesize, ext, mimetype, keywords, faces, rating, imagesize, aspectratio, \
   make, model, orientation, datetimeoriginal, createdate, filemodifydate, filedate \
 ) \
 values ( \
-  @album, @filename, @filesize, @ext, @mimetype, @keywords, @faces, @rating, @imagesize, @aspectratio, \
+  @album, @filename, @folder, @filesize, @ext, @mimetype, @keywords, @faces, @rating, @imagesize, @aspectratio, \
   @make, @model, @orientation, @datetimeoriginal, @createdate, @filemodifydate, @filedate \
 )");
 
@@ -157,26 +157,31 @@ Promise.all([filesPromise, metaPromise])
       insertMany(promiseReturns.map(tags=>{
 
         let imageSize = tags.ImageSize ? tags.ImageSize.split(/x/i) : "", 
-          aspectRatio = imageSize ? imageSize[0]/imageSize[1] : 0;
+          aspectRatio = imageSize ? 
+            tags.orientation ? 
+              [6,8].indexOf(tags.orientation) ? imageSize[1]/imageSize[0] : imageSize[0]/imageSize[1] 
+            : imageSize[0]/imageSize[1] 
+          : 0;
 
         return {
           album: album,
           filename: tags.Directory.replace(albums[album], "")+"/"+tags.FileName,
-          filesize: tags.FileSize||"",
+          folder: tags.Directory.replace(albums[album], ""),
+          filesize: tags.FileSize||null,
           ext: tags.FileName.split(".").pop(),
-          mimetype: tags.MIMEType||"",
-          keywords: tags.Keywords ? ((typeof(tags.Keywords) == "string") ?  tags.Keywords : tags.Keywords.join(", ")) : "",
-          faces: tags.RegionInfo ? tags.RegionInfo.RegionList.map(d=>d.Name).join(", ") : "",
-          rating: tags.Rating||"",
-          imagesize: tags.ImageSize||"",
+          mimetype: tags.MIMEType||null,
+          keywords: tags.Keywords ? ((typeof(tags.Keywords) == "string") ?  tags.Keywords : tags.Keywords.join(", ")) : null,
+          faces: tags.RegionInfo ? tags.RegionInfo.RegionList.map(d=>d.Name).join(", ") : null,
+          rating: tags.Rating||null,
+          imagesize: tags.ImageSize||null,
           aspectratio: aspectRatio,
-          make: tags.Make||"",
-          model: tags.Model||"",
-          orientation: tags.Orientation||"",
-          datetimeoriginal: (tags.DateTimeOriginal||"").toString(),
-          createdate: (tags.CreateDate||"").toString(), 
-          filemodifydate: (tags.FileModifyDate||"").toString(),
-          filedate: (tags.DateTimeOriginal || tags.CreateDate || tags.FileModifyDate).toString()
+          make: tags.Make||null,
+          model: tags.Model||null,
+          orientation: tags.Orientation||null,
+          datetimeoriginal: tags.DateTimeOriginal ? tags.DateTimeOriginal.toString() : null,
+          createdate: tags.CreateDate ? tags.CreateDate.toString() : null,
+          filemodifydate: tags.FileModifyDate ? tags.FileModifyDate.toString() : null,
+          filedate: tags.DateTimeOriginal ? tags.DateTimeOriginal.toString() : (tags.CreateDate ? tags.CreateDate.toString() : (tags.FileModifyDate.toString() ))
         }
       }));
 

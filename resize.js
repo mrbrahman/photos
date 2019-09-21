@@ -2,7 +2,6 @@ module.exports = function (path, width, height, format) {
 
 //export default function(path, width, height, format){
   const fs = require('fs');
-  const sharp = require('sharp');
   
   const readStream = fs.createReadStream(path);
   let transform = sharp()
