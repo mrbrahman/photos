@@ -14,11 +14,21 @@ table, caption, tbody, tfoot, thead, tr, th, td {
   display: block;
 }
 
+#content {
+  padding: 30px;
+}
+
 /*
 body {
   background-color: black;
 }
 */
+
+#heade {
+  position: sticky;
+  top: 0;
+}
+
 
 </style>
 
@@ -27,25 +37,31 @@ body {
 <image src="getImage?album=PHOTOS&file=2010/2010-05-09 Albany Tulips Festival/IMG_4691.JPG&width=150&height=350"></image>
 -->
 
+<div id="main-outer-div">
 
-<input type="text" id="search-box" name="search-box" required size="70">
-<button id="search-button" onclick="searchClicked()">Search</button>
+  <div id="header">
+    <input type="text" id="search-box" name="search-box" required size="70">
+    <button id="search-button" onclick="searchClicked()">Search</button> 
+  </div>
 
-<div id='pig'></div>
+  <div id='content'></div>
 
-<div id='content'></div>
+</div>
 
-<script src="pig.min.js"></script>
+<script src="pig.js"></script>
 <script src="https://d3js.org/d3.v5.min.js"></script>
 <script src="slideshow.js"></script>
 
 <script>
 
 var pigOptions = {
+  //containerId: 'content',
   urlForSize: function(filename, size) {
     return `/getThumbnail?album=PHOTOS&filename=${filename}&height=${size}`
   },
-  onClickHander: function(filename) { console.log(filename); },
+  onClickHandler: function(filename) {
+    console.log(filename); 
+  },
 };
 
 function searchClicked(){
@@ -66,6 +82,12 @@ function searchClicked(){
   })
   .then(function(result){
     console.log(result.length);
+    let content = d3.select("#content");
+    content.selectAll("*").remove();
+    content.append("div")
+      .attr("id", "pig")
+    ;
+
     var pig = new Pig(result, pigOptions).enable();
   })
 }
