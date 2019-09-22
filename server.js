@@ -7,7 +7,6 @@ const fs = require('fs');
 
 process.env.UV_THREADPOOL_SIZE = 1;
 const sharp = require('sharp');
-sharp(null, { failOnError: false });
 sharp.concurrency(1);
 sharp.cache(0);
 
@@ -26,7 +25,7 @@ function resize(path, width, height, format) {
 
 //export default function(path, width, height, format){
   const readStream = fs.createReadStream(path);
-  let transform = sharp()
+  let transform = sharp(null, { failOnError: false })
     .rotate()
     .resize({
       width: width, 
@@ -122,8 +121,6 @@ app.get('/search', function(req, res){
     , date(filedate) filedate
   from meta
   where mimetype is not null and mimetype like 'image%'
-  and lower(make) not like '%samsung%'
-  and lower(model) not like '%samsung%'
   and meta match '${filters}'
   order by ${orderby}`);
 
