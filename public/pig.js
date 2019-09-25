@@ -269,8 +269,8 @@
        *
        * @returns {string} The URL of the image at the given size.
        */
-      urlForSize: function(filename, size) {
-        return '/img/' + size + '/' + filename;
+      urlForSize: function(imageData, size) {
+        return '/img/' + size + '/' + imageData.filename;
       },
 
       /**
@@ -339,6 +339,7 @@
 
     // Our global reference for images in the grid.  Note that not all of these
     // images are necessarily in view or loaded.
+    this.imagesData = imageData;
     this.images = this._parseImageData(imageData);
 
     // Inject our boilerplate CSS.
@@ -752,6 +753,8 @@
       loaded: pig.settings.classPrefix + '-loaded',
     };
 
+    this.imageData = singleImageData;
+
     return this;
   }
 
@@ -784,7 +787,7 @@
       // Show thumbnail
       if (!this.thumbnail) {
         this.thumbnail = new Image();
-        this.thumbnail.src = this.pig.settings.urlForSize(this.filename, this.pig.settings.thumbnailSize);
+        this.thumbnail.src = this.pig.settings.urlForSize(this.imageData, this.pig.settings.thumbnailSize);
         this.thumbnail.className = this.classNames.thumbnail;
         this.thumbnail.onload = function() {
 
@@ -801,7 +804,7 @@
       // Show full image
       if (!this.fullImage) {
         this.fullImage = new Image();
-        this.fullImage.src = this.pig.settings.urlForSize(this.filename, this.pig.settings.getImageSize(this.pig.lastWindowWidth));
+        this.fullImage.src = this.pig.settings.urlForSize(this.imageData, this.pig.settings.getImageSize(this.pig.lastWindowWidth));
         this.fullImage.onload = function() {
 
           // We have to make sure fullImage still exists, we may have already been
@@ -858,7 +861,9 @@
     if (!this.element) {
       this.element = document.createElement(this.pig.settings.figureTagName);
       this.element.className = this.classNames.figure;
-      this.element.addEventListener("click", function (){ this.pig.settings.onClickHandler(this); }.bind(this) );
+      this.element.addEventListener("click", function (){ 
+        this.pig.settings.onClickHandler(this.imageData, this.index, this.pig.imagesData); 
+      }.bind(this) );
       this._updateStyles();
     }
 
