@@ -1,52 +1,153 @@
 <!DOCTYPE html>
 
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.min.css">
+<script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+    
 <style>
 
-html, body, div, span, object, iframe,
+/* html, body, div, span, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
 table, caption, tbody, tfoot, thead, tr, th, td {
   margin: 0;
   padding: 0;
   border: 0;
-}
+} */
 
 .slideshow-image, .slideshow-video {
   display: block;
 }
 
 #content {
-  padding: 30px;
+  padding: 0px;
 }
 
-/*
-body {
-  background-color: black;
-}
-*/
-
-#heade {
+.sticky-top {
   position: sticky;
+  padding: 5px;
   top: 0;
+}
+
+.centerall {
+  height: 100vh;
+  padding: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
 }
 
 
 </style>
 
-<!--
-<image src="getImage?album=TEST&file=images/IMG_4691.JPG&width=150&height=350"></image>
-<image src="getImage?album=PHOTOS&file=2010/2010-05-09 Albany Tulips Festival/IMG_4691.JPG&width=150&height=350"></image>
--->
 
 <div id="main-outer-div">
 
-  <div id="header">
-    <input type="text" id="search-box" name="search-box" required size="70">
-    <button id="search-button" onclick="searchClicked()">Search</button> 
+<!-- 
+<nav class="navbar" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://bulma.io">
+      <img src="https://bulma.io/images/bulma-logo.png" width="112" height="28">
+    </a>
+
+    <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </a>
   </div>
+
+  <div id="navbarBasicExample" class="navbar-menu">
+    <div class="navbar-start">
+      <a class="navbar-item">
+        Home
+      </a>
+
+      <a class="navbar-item">
+        Documentation
+      </a>
+
+      <div class="navbar-item has-dropdown is-hoverable">
+        <a class="navbar-link">
+          More
+        </a>
+
+        <div class="navbar-dropdown">
+          <a class="navbar-item">
+            About
+          </a>
+          <a class="navbar-item">
+            Jobs
+          </a>
+          <a class="navbar-item">
+            Contact
+          </a>
+          <hr class="navbar-divider">
+          <a class="navbar-item">
+            Report an issue
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="navbar-end">
+      <div class="navbar-item">
+        <div class="buttons">
+          <a class="button is-primary">
+            <strong>Sign up</strong>
+          </a>
+          <a class="button is-light">
+            Log in
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav> -->
+
+<nav class="navbar is-fixed-top" role="navigation">
+
+<div class="navbar-brand">
+  <a class="navbar-item" href="https://bulma.io">
+    <img src="https://bulma.io/images/bulma-logo.png" width="112" height="28">
+  </a>
+
+  <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+    <span aria-hidden="true"></span>
+    <span aria-hidden="true"></span>
+    <span aria-hidden="true"></span>
+  </a>
+</div>
+
+<div id="navbarBasicExample" class="navbar-menu">
+  <div class="navbar-start">
+
+    <div class="navbar-item field has-addons">
+      <div class="control">
+        <input class="input is-rounded" type="text" id="search-box" name="search-box" required size="30">
+      </div>
+      <div class="control">
+        <button class="button is-primary" id="search-button" onclick="searchClicked()">Search</button> 
+      </div>
+    </div>
+  </div>
+
+  <div class="navbar-end">
+    <a class="navbar-item">
+      Browse
+    </a>
+
+    <a class="navbar-item">
+      Organize
+    </a>
+  </div>
+
+</nav>
 
   <div id='content'></div>
 
 </div>
+
 
 <script src="pig.js"></script>
 <script src="https://d3js.org/d3.v5.min.js"></script>
@@ -54,13 +155,24 @@ body {
 
 <script>
 
+var slideshow = photos.slideshow().duration(6).loop(false);
+
 var pigOptions = {
   //containerId: 'content',
-  urlForSize: function(filename, size) {
-    return `/getThumbnail?album=PHOTOS&filename=${filename}&height=${size}`
+  urlForSize: function(imageData, size) {
+    return `/getThumbnail?album=${imageData.album}&filename=${imageData.filename}&height=${size}`
   },
-  onClickHandler: function(filename) {
-    console.log(filename); 
+  onClickHandler: function(d,i,arr) {
+
+    slideshow.startFrom(i).autoPlay(false);
+    
+    d3.select("#content").selectAll("*").style("display", "none");
+
+    var slideshowDiv = d3.select("#content")
+      .append("div")
+        .attr("id", "slideshow")
+      .call(slideshow, arr)
+    ;
   },
 };
 
@@ -91,30 +203,5 @@ function searchClicked(){
     var pig = new Pig(result, pigOptions).enable();
   })
 }
-
-var memories = [
-  {album: "TEST", filename:"images/DSC04487.JPG", aspectRatio: 1280/960, mimetype: "image/jpeg"},
-  //{album: "TEST", file:"images/20190203_174921 Abhinav Jumping 100 times.mp4", aspectRatio: 1280/960, mimetype: "video/mp4"},
-  {album: "TEST", filename:"images/IMG_20171225_200624~2.jpg", aspectRatio: 2400/3200, mimetype: "image/jpeg"},
-  //{album: "TEST", filename:"images/AfterMusicClass.mp3", aspectRatio: 2400/3200, mimetype: "audio/mpeg"},
-  {album: "TEST", filename:"images/IMG_20171225_200639~2.jpg", aspectRatio: 2400/3200, mimetype: "image/jpeg"},
-  {album: "TEST", filename:"images/IMG_4691.JPG", aspectRatio: 2592/1944, mimetype: "image/jpeg"},
-  {album: "TEST", filename:"images/IMG_9055.JPG", aspectRatio: 3456/2304, mimetype: "image/jpeg"},
-  {album: "TEST", filename:"images/small.jpg", aspectRatio: 150/113, mimetype: "image/jpeg"},
-  //{album: "TEST", file:"images/VID_20181231_223653 Abhinav with Hair Towel.mp4", aspectRatio: 1280/960, mimetype: "video/mp4"},
-];
-
-
-// var pig = new Pig(memories, pigOptions).enable();
-
-
-// var slideshow = photos.slideshow().duration(6).loop(false);
-
-// var slideshowDiv = d3.select("#content")
-//   .append("div")
-//     .attr("id", "slideshow")
-//   .call(slideshow, memories)
-// ;
-
 
 </script>
