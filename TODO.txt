@@ -1,0 +1,17 @@
+- Look and feel:
+  - Use standard CSS library (bulma?)
+  - Use navigo - simple client side router
+
+- Pig:
+  - Implement grouping of pics by date / folder in Pig
+
+  - (done) Seperate file name from image array element
+  - (done) Implement slideshow initiation from Pig upon click
+  
+- Slideshow:
+  - Controls
+  - Ending Slideshow (Esc button, X mark on screen)
+
+- Server
+  - Take thumbnails of video, audio
+  - Modify getThumbnail to read those thumbnails
