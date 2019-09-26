@@ -37,13 +37,21 @@ table, caption, tbody, tfoot, thead, tr, th, td {
   align-items: center;
 }
 
+.slideshow-background{
+  background: black;
+}
+
+.hide{
+  display: none;
+}
+
 
 </style>
 
 
 <div id="main-outer-div">
 
-<nav class="navbar is-fixed-top" role="navigation">
+<nav id="navbar" class="navbar is-fixed-top" role="navigation">
 
 <div class="navbar-brand">
   <a class="navbar-item" href="#">
@@ -51,7 +59,6 @@ table, caption, tbody, tfoot, thead, tr, th, td {
     <img src="icons8-video-camera-144.png" height="144">
     <p>Replay</p>
   </a>
-
 
   <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
     <span aria-hidden="true"></span>
@@ -61,20 +68,35 @@ table, caption, tbody, tfoot, thead, tr, th, td {
 </div>
 
 <div id="navbarBasicExample" class="navbar-menu">
+
   <div class="navbar-start">
+
+    <a class="navbar-item">
+      Browse
+    </a>
+
+    <a class="navbar-item">
+      Import
+    </a>
 
     <div class="navbar-item">
 
-      <div class="navbar-item field has-addons">
+      <div class="field has-addons">
         <div class="control">
-          <input class="input is-rounded" type="text" id="search-box" name="search-box" required size="25">
+          <input class="input is-rounded" type="text" id="search-box" name="search-box" required size="30">
         </div>
         <div class="control">
-          <button class="button is-primary" id="search-button" onclick="searchClicked()">Search</button>
+          <button class="button is-link is-rounded" id="search-button" onclick="searchClicked()">Search</button>
         </div>
       </div>
-    
+
     </div>
+
+  </div>
+
+
+
+  <div class="navbar-end">
 
 <!--     <div class="navbar-item">
 
@@ -91,16 +113,6 @@ table, caption, tbody, tfoot, thead, tr, th, td {
       </div>
     </div> -->
 
-  </div>
-
-  <div class="navbar-end">
-    <a class="navbar-item">
-      Browse
-    </a>
-
-    <a class="navbar-item">
-      Organize
-    </a>
   </div>
 
 </nav>
@@ -127,7 +139,8 @@ var pigOptions = {
 
     slideshow.startFrom(i).autoPlay(false);
     
-    d3.select("#content").selectAll("*").style("display", "none");
+    document.getElementById("pig").classList.add("hide");
+    document.getElementById("navbar").classList.add("hide");
 
     var slideshowDiv = d3.select("#content")
       .append("div")
@@ -166,5 +179,42 @@ function searchClicked(){
     var pig = new Pig(result, pigOptions).enable();
   })
 }
+
+// enable burger for mobile viewport
+// found at: https://www.adam-bray.com/2018/04/03/responsive-bulma-css-navigation-bar/
+(function() {
+  var burger = document.querySelector('.burger');
+  var nav = document.querySelector('#'+burger.dataset.target);
+ 
+  burger.addEventListener('click', function(){
+    burger.classList.toggle('is-active');
+    nav.classList.toggle('is-active');
+  });
+})();
+
+function endSlideShow(){
+  slideshow.end();
+  document.getElementById("slideshow").remove();
+  
+  document.getElementById("pig").classList.remove("hide");
+  document.getElementById("navbar").classList.remove("hide");
+}
+
+function handleMainPageKeyPress(event){
+  if (event.keyCode == 27){
+    endSlideShow();
+  } else if(event.keyCode == 39){
+    slideshow.next();
+  } else if(event.keyCode == 37){
+    slideshow.previous();
+  }
+}
+
+document.addEventListener("keydown", handleMainPageKeyPress);
+
+// 27 esc
+// 32 space
+// 39 right arrow
+// 37 left arrow
 
 </script>

@@ -13,9 +13,9 @@ photos.slideshow = function(){
 
     newScreenWidth=screenWidth; newScreenHeight=screenHeight;
 
-    document.addEventListener("keydown", function(event) {
-      console.log(event.keyCode);
-    });
+//     document.addEventListener("keydown", function(event) {
+//       console.log(event.keyCode);
+//     });
 
     window.addEventListener("resize", function(){
       newScreenWidth=document.documentElement.clientWidth;
@@ -27,6 +27,11 @@ photos.slideshow = function(){
     state.totalContent = slideshowItems.length-1;
     state.contentPointer = startFrom-1 || -1;
     state.paused = false;
+
+    document.documentElement.classList.add("slideshow-background");
+//     d3.select("html")
+//       .style("background", "black")
+//     ;
     
     selection.each(function(){
 
@@ -295,6 +300,11 @@ photos.slideshow = function(){
 
   my.currentPosition = function(){
     return state.contentPointer;
+  }
+
+  my.end = function(){
+    document.documentElement.classList.remove("slideshow-background");
+    slideshowDiv.selectAll("*").remove();
   }
 
   return my;
