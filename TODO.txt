@@ -1,6 +1,9 @@
-- Look and feel:
-  - Use standard CSS library (bulma?)
+- UI:
+  - Handle '&' char in folder/filename when doing getThumbnail / getImage
   - Use navigo - simple client side router
+  - Hide vertical scroll from screen
+
+  - (done) Use standard CSS library (bulma?)
 
 - Pig:
   - Implement grouping of pics by date / folder in Pig
@@ -12,6 +15,14 @@
   - Controls
   - Ending Slideshow (Esc button, X mark on screen)
 
+- Sharp:
+  - Try params to speed up sharp
+
 - Server
   - Take thumbnails of video, audio
   - Modify getThumbnail to read those thumbnails
+  - See if it makes sense to get those 20px thumbnails stored during meta extract
+
+- Others
+  - See if d3.js is really needed? Can I do in pure javascript?
+
