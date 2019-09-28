@@ -17,11 +17,11 @@ photos.slideshow = function(){
 //       console.log(event.keyCode);
 //     });
 
-    window.addEventListener("resize", function(){
-      newScreenWidth=document.documentElement.clientWidth;
-      newScreenHeight=document.documentElement.clientHeight;
+//     window.addEventListener("resize", function(){
+//       newScreenWidth=document.documentElement.clientWidth;
+//       newScreenHeight=document.documentElement.clientHeight;
 
-    });
+//     });
 
     state.slideshowItems = slideshowItems;
     state.totalContent = slideshowItems.length-1;
@@ -181,7 +181,7 @@ photos.slideshow = function(){
       .remove();
 
     var imageDiv = slideshowDiv.append("div")
-      .attr("style", `position: absolute; top: ${topPixels}px; left: ${leftPixels}px`)
+      .attr("style", `position: absolute; top: ${topPixels+window.scrollY}px; left: ${leftPixels}px`)
     ;
 
     var img = imageDiv.append("img")
@@ -196,7 +196,7 @@ photos.slideshow = function(){
 
     if(legend){
       slideshowDiv.append("div")
-        .attr("style", "position: absolute; top:10px; left:10px")
+        .attr("style", `position: absolute; top:${window.scrollY+10}px; left:10px`)
         .append("p")
           .attr("style", "font: 14px arial, sans-serif; color: White;")
           .html(image.filename)

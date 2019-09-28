@@ -2,17 +2,14 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.min.css">
-<script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+<!-- <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script> -->
     
 <style>
 
-/* html, body, div, span, object, iframe,
-h1, h2, h3, h4, h5, h6, p, blockquote, pre,
-table, caption, tbody, tfoot, thead, tr, th, td {
-  margin: 0;
-  padding: 0;
-  border: 0;
-} */
+/* reset bulma setting */
+html{
+  overflow-y: auto;
+}
 
 .slideshow-image, .slideshow-video {
   display: block;
@@ -42,12 +39,15 @@ table, caption, tbody, tfoot, thead, tr, th, td {
 }
 
 .hide{
-  display: none;
+/*   display: none;
+  visibility: hidden; */
+  opacity: 0;
 }
 
 
 </style>
 
+<html class="has-navbar-fixed-top">
 
 <div id="main-outer-div">
 
@@ -117,7 +117,8 @@ table, caption, tbody, tfoot, thead, tr, th, td {
 
 </nav>
 
-  <div id='content'></div>
+  <div id='content' style="overflow: hidden; width: 100%; height: 100%;">
+  </div>
 
 </div>
 
@@ -128,26 +129,31 @@ table, caption, tbody, tfoot, thead, tr, th, td {
 
 <script>
 
+var pig; 
+
 var slideshow = photos.slideshow().duration(6).loop(false);
 
 var pigOptions = {
-  //containerId: 'content',
+  spaceBetweenImages: 4,
+  //scroller: document.getElementById("content"),
   urlForSize: function(imageData, size) {
     return `/getThumbnail?album=${imageData.album}&filename=${imageData.filename}&height=${size}`
   },
   onClickHandler: function(d,i,arr) {
 
-    slideshow.startFrom(i).autoPlay(false);
-    
-    document.getElementById("pig").classList.add("hide");
-    document.getElementById("navbar").classList.add("hide");
+    //pig.disable();
 
+    slideshow.startFrom(i).autoPlay(false);
     var slideshowDiv = d3.select("#content")
       .append("div")
         .attr("id", "slideshow")
       .call(slideshow, arr)
     ;
-  },
+    
+    document.getElementById("navbar").classList.add("hide");
+    document.getElementById("pig").classList.add("hide");
+
+  }
 };
 
 function searchClicked(){
@@ -176,7 +182,8 @@ function searchClicked(){
       .attr("id", "pig")
     ;
 
-    var pig = new Pig(result, pigOptions).enable();
+    pig = new Pig(result, pigOptions)
+    pig.enable();
   })
 }
 
@@ -196,6 +203,7 @@ function endSlideShow(){
   slideshow.end();
   document.getElementById("slideshow").remove();
   
+  //pig.enable();
   document.getElementById("pig").classList.remove("hide");
   document.getElementById("navbar").classList.remove("hide");
 }
@@ -218,3 +226,5 @@ document.addEventListener("keydown", handleMainPageKeyPress);
 // 37 left arrow
 
 </script>
+
+</html>
