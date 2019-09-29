@@ -785,21 +785,21 @@
       }
 
       // Show thumbnail
-      if (!this.thumbnail) {
-        this.thumbnail = new Image();
-        this.thumbnail.src = this.pig.settings.urlForSize(this.imageData, this.pig.settings.thumbnailSize);
-        this.thumbnail.className = this.classNames.thumbnail;
-        this.thumbnail.onload = function() {
+//       if (!this.thumbnail) {
+//         this.thumbnail = new Image();
+//         this.thumbnail.src = this.pig.settings.urlForSize(this.imageData, this.pig.settings.thumbnailSize);
+//         this.thumbnail.className = this.classNames.thumbnail;
+//         this.thumbnail.onload = function() {
 
-          // We have to make sure thumbnail still exists, we may have already been
-          // deallocated if the user scrolls too fast.
-          if (this.thumbnail) {
-            this.thumbnail.className += ' ' + this.classNames.loaded;
-          }
-        }.bind(this);
+//           // We have to make sure thumbnail still exists, we may have already been
+//           // deallocated if the user scrolls too fast.
+//           if (this.thumbnail) {
+//             this.thumbnail.className += ' ' + this.classNames.loaded;
+//           }
+//         }.bind(this);
 
-        this.getElement().appendChild(this.thumbnail);
-      }
+//         this.getElement().appendChild(this.thumbnail);
+//       }
 
       // Show full image
       if (!this.fullImage) {
