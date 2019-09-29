@@ -2,6 +2,8 @@
   - Handle '&' char in folder/filename when doing getThumbnail / getImage
   - Use navigo - simple client side router
   - Hide vertical scroll from screen
+      body: overflow-y: hidden (removes scrollbar)
+      c-wiz (.TWmIyd.uGCjIb): overflow-y: auto; right: -24px; padding: 24px, 48px, 0px, 24px
 
   - (done) Use standard CSS library (bulma?)
 
@@ -14,6 +16,7 @@
 - Slideshow:
   - Controls
   - Ending Slideshow (Esc button, X mark on screen)
+  - Arrest scrolling and arrows
 
 - Sharp:
   - Try params to speed up sharp
