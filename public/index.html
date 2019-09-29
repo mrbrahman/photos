@@ -19,12 +19,6 @@ html{
   padding: 0px;
 }
 
-.sticky-top {
-  position: sticky;
-  padding: 5px;
-  top: 0;
-}
-
 .centerall {
   height: 100vh;
   padding: 0;
@@ -129,8 +123,6 @@ html{
 
 <script>
 
-var pig; 
-
 var slideshow = photos.slideshow().duration(6).loop(false);
 
 var pigOptions = {
@@ -182,7 +174,7 @@ function searchClicked(){
       .attr("id", "pig")
     ;
 
-    pig = new Pig(result, pigOptions)
+    var pig = new Pig(result, pigOptions)
     pig.enable();
   })
 }
@@ -228,3 +220,4 @@ document.addEventListener("keydown", handleMainPageKeyPress);
 </script>
 
 </html>
+

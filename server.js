@@ -96,7 +96,7 @@ app.get(/\/last(\d+)/, function(req, res){
 
 app.get('/search', function(req, res){
   
-  let cols = ["folder", "filename", "mimetype", "tags", "faces", "rating", "make", "model"];
+  let cols = ["folder", "filename", "mimetype", "keywords", "faces", "rating", "make", "model"];
   let nonCols = ["group", "filematch", "datefrom", "dateto"];
 
   let filters="", orderby="";
@@ -117,7 +117,10 @@ app.get('/search', function(req, res){
   }
 
   let stmt = db.prepare(`
-  select album, filename, mimetype, aspectratio as aspectRatio, folder
+  select album, 
+    --replace(filename, '&', '%26') as filename, 
+    filename,
+    mimetype, aspectratio as aspectRatio, folder
     , date(filedate) filedate
   from meta
   where mimetype is not null and mimetype like 'image%'

@@ -3,7 +3,7 @@ var photos = photos || {};
 
 photos.slideshow = function(){
 
-  var fadein=1, fadeout=1, duration=3, legend=true, i=0, loop=false, autoPlay=true, startFrom;
+  var fadein=1, fadeout=1, duration=3, legend=true, loop=false, autoPlay=true, startFrom;
   var slideshowDiv, slideshowTimer, screenWidth, screenHeight, newScreenWidth, newScreenHeight,
     state = {};
   
@@ -29,9 +29,6 @@ photos.slideshow = function(){
     state.paused = false;
 
     document.documentElement.classList.add("slideshow-background");
-//     d3.select("html")
-//       .style("background", "black")
-//     ;
     
     selection.each(function(){
 
