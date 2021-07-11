@@ -5,6 +5,8 @@
       body: overflow-y: hidden (removes scrollbar)
       c-wiz (.TWmIyd.uGCjIb): overflow-y: auto; right: -24px; padding: 24px, 48px, 0px, 24px
 
+  - Integrate collection of meta from UI (calling of s.js)
+
   - (done) Use standard CSS library (bulma?)
 
 - Pig:
@@ -14,17 +16,20 @@
   - (done) Implement slideshow initiation from Pig upon click
   
 - Slideshow:
-  - Controls
-  - Ending Slideshow (Esc button, X mark on screen)
-  - Arrest scrolling and arrows
+  - UI Controls
+  - (key controls will be handled by the caller)
 
 - Sharp:
   - Try params to speed up sharp
 
 - Server
   - Take thumbnails of video, audio
+  - Take thumbnails of images (does it make sense?)
+      Use sharp? See: https://github.com/lovell/sharp/issues/792
   - Modify getThumbnail to read those thumbnails
-  - See if it makes sense to get those 20px thumbnails stored during meta extract
+  - Extract gps co-ordinates
+  - Extract media duration for videos
+  - Handle 3ga, 3gp, wmv extensions during extraction
 
 - Others
   - See if d3.js is really needed? Can I do in pure javascript?

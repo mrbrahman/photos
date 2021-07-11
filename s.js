@@ -1,7 +1,7 @@
 const dir = require('node-dir');
 const fs = require('fs');
 const Database = require('better-sqlite3');
-const db = new Database('meta.db', {  }); //verbose: console.log
+const db = new Database('meta.db', {  }); // verbose: console.log
 const exiftool = require("exiftool-vendored").exiftool;
 const ffmpeg = require('fluent-ffmpeg');
 
@@ -14,7 +14,8 @@ log("Starting");
 var stmt = db.prepare(`
   create virtual table if not exists meta using fts5(
     album, filename, folder, filesize, ext, mimetype, keywords, faces, rating, imagesize, aspectratio,
-    make, model, orientation, datetimeoriginal, createdate, filemodifydate, filedate); 
+    make, model, orientation, gpsposition, duration, 
+    datetimeoriginal, createdate, filemodifydate, filedate); 
 `);
 
 var info = stmt.run();
@@ -47,18 +48,14 @@ function getFilesMtime(files){
       resolve(stats);
     } catch(err){  // TODO: Doesn't seem to work
       reject(err);
-      return;
     }
   })
 }
 
-var filesPromise = dir.promiseFiles(albums[album])
-  .then(getFilesMtime);
-
-
-var stmt = db.prepare("select filename, filemodifydate from meta where album = ?");
 
 function getMetadata(album){
+  var stmt = db.prepare("select filename, filemodifydate from meta where album = ?");
+
   return new Promise((resolve,reject)=>{
     let sqlOutput = stmt.all(album);
     let meta= {};
@@ -69,8 +66,6 @@ function getMetadata(album){
   })
 }
 
-var metaPromise = getMetadata(album);
-
 const deleteStmt = db.prepare("delete from meta where album = @album and filename = @filename");
 
 const deleteMany = db.transaction((records)=>{
@@ -79,11 +74,11 @@ const deleteMany = db.transaction((records)=>{
 
 const insertStmt = db.prepare("insert into meta ( \
   album, filename, folder, filesize, ext, mimetype, keywords, faces, rating, imagesize, aspectratio, \
-  make, model, orientation, datetimeoriginal, createdate, filemodifydate, filedate \
+  make, model, orientation, gpsposition, duration, datetimeoriginal, createdate, filemodifydate, filedate \
 ) \
 values ( \
   @album, @filename, @folder, @filesize, @ext, @mimetype, @keywords, @faces, @rating, @imagesize, @aspectratio, \
-  @make, @model, @orientation, @datetimeoriginal, @createdate, @filemodifydate, @filedate \
+  @make, @model, @orientation, @gpsposition, @duration, @datetimeoriginal, @createdate, @filemodifydate, @filedate \
 )");
 
 const insertMany = db.transaction((records)=>{
@@ -109,26 +104,28 @@ function extractVideoThumbnail(videoTags){
 
   var tags=videoTags;
 
-  return new Promise((resolve,reject)=>{
+  var p = new Promise((resolve,reject)=>{
+    
     let sourceFileName = tags.Directory+'/'+tags.FileName,
       videoThumbnailFileName = album.concat('/', tags.Directory.replace(albums[album], ""), '/', tags.FileName, '.jpg').replace(/\//gi, '_');
 
-    // extract thumbnail
+    //log(`sourceFileName ${sourceFileName} videoThumbnailFileName ${videoThumbnailFileName}`);
     ffmpeg(sourceFileName)
       .on("error", function(error){
-        console.log(error)
+        log(`FFMPEG ERROR for ${sourceFileName} ${error}`)
+        reject(error);
       })
       .on("start", function(cmd){
-       console.log("Running: "+cmd)
+        log("Running: "+cmd)
       })
       .thumbnail({
         count: 1,
         folder: '.video-thumbnails',
         filename: videoThumbnailFileName,
-        size: tags.ImageSize||"1040x640"
+        size: tags.ImageSize||"1040x640"    // TODO: extract only largest thumbnail needed?
       })
       .on("end", async function(){
-        console.log("writing tags...");
+        log("writing tags...");
 
         try{
           var writeTag = await exiftool.write('.video-thumbnails/'+videoThumbnailFileName, {
@@ -136,18 +133,24 @@ function extractVideoThumbnail(videoTags){
           });
           resolve('.video-thumbnails/'+videoThumbnailFileName);
         } catch(err) {
-          console.log("EXIFTOOL ERROR during Orientation "+ err)
+          log("EXIFTOOL ERROR during Orientation "+ err)
           reject(err);
         }
       });
+    
   });
+
+  return p;
 }
 
 async function run(){
+  var metaPromise = getMetadata(album);
+
+  var filesPromise = dir.promiseFiles(albums[album])
+    .then(getFilesMtime);
+
   var values = await Promise.all([filesPromise, metaPromise]);
 
-// Promise.all([filesPromise, metaPromise])
-// .then(function(values){
   let fs=values[0], meta=values[1], delta=[], removed=[];
   log("fs "+Object.keys(fs).length + " meta "+Object.keys(meta).length);
   
@@ -169,13 +172,13 @@ async function run(){
 
   try{
 
-    // Remove records withoug files anymore
+    // Remove records without files anymore
     deleteMany(removed.map(r=>{
       return {
         album: album,
         filename: r
       }
-    }))
+    }));
 
 
     log("Starting Promises to extract metadata using exiftool");
@@ -188,7 +191,6 @@ async function run(){
     });
 
     var exifMetaData = await Promise.all(exifPromises);
-//     .then(exifMetaData=>{
 
     log("All Promises Completed; Starting DELETE");
 
@@ -203,36 +205,53 @@ async function run(){
     // extract video thumbnails
     let videosExif = exifMetaData.filter(tags=>{
       //log(util.inspect(tags));
-      let mimetype = tags["MIMEType"]||"x"
-      return mimetype.startsWith("video")
+      let mimetype = tags["MIMEType"]||"x", mt = mimetype.split("/");
+      return mt[0]=="video" && ["3gpp","x-ms-wmv"].indexOf(mt[1]) < 0
     });
 
     log("# of Videos: "+videosExif.length);
-
-    var videoThumbPromises = [];
-    videosExif.forEach(video=>{
-      videoThumbPromises.push( extractVideoThumbnail(video) );
-    });
-
     log("Starting extraction of video Thumbnails");
 
-    await Promise.all(videoThumbPromises);
+    for (video of videosExif){
+      try{
+        let p = await extractVideoThumbnail(video);
+      } catch(err) {
+        log(`ERROR during video thumbnail extraction for ${tags.FileName} ${err}`);
+      }
+    }
 
-    log("Starting INSERT");
+    log("Everything successful so far... Now starting INSERT");
 
     // now, insert the new metadata
     insertMany(exifMetaData.map(tags=>{
 
       let imageSize = tags.ImageSize ? tags.ImageSize.split(/x/i) : "";
 
-      // TODO: Different for video needed here
-      let
-        aspectRatio = imageSize ? 
-          tags.Orientation ? 
-            ([6,8].indexOf(tags.Orientation) >= 0) ? imageSize[1]/imageSize[0] : imageSize[0]/imageSize[1] 
-          : imageSize[0]/imageSize[1] 
-        : 0;
+      let aspectRatio=0;
+      switch((tags["MIMEType"]||"x").split("/")[0]){
+        case "image":
+          aspectRatio = imageSize ? 
+            tags.Orientation ? 
+              ([6,8].indexOf(tags.Orientation) >= 0) ? imageSize[1]/imageSize[0] : imageSize[0]/imageSize[1] 
+            : imageSize[0]/imageSize[1] 
+          : 0;
+          break;
+        
+        case "video":
+          aspectRatio = imageSize ?
+            tags.Rotation ?
+              ([90,270].indexOf(tags.Rotation) >= 0) ? imageSize[1]/imageSize[0] : imageSize[0]/imageSize[1]
+            : imageSize[0]/imageSize[1]
+          : 0;
+          break;
 
+        // case "audio":
+        // TBD
+        
+        default:
+          break;
+      }
+        
       return {
         album: album,
         filename: tags.Directory.replace(albums[album], "")+"/"+tags.FileName,
@@ -248,6 +267,8 @@ async function run(){
         make: tags.Make||null,
         model: tags.Model||null,
         orientation: tags.Orientation||null,
+        gpsposition: tags.GPSPosition||null,
+        duration: tags.MediaDuration||null,
         datetimeoriginal: tags.DateTimeOriginal ? tags.DateTimeOriginal.toString() : null,
         createdate: tags.CreateDate ? tags.CreateDate.toString() : null,
         filemodifydate: tags.FileModifyDate ? tags.FileModifyDate.toString() : null,
@@ -255,15 +276,6 @@ async function run(){
       }
     }));
 
-//     })
-//     .catch(err=>{
-//       log(`PROMISE ERROR ${err}`);
-//      })
-//     .finally(()=>{
-//       exiftool.end();
-//       log("In FINALLY block");
-
-//      });
   } catch(err){
     console.error("ERROR: ", err)
   } finally {

@@ -21,9 +21,8 @@ let albums= {
   PHOTOS: "/media/windows/PHOTOS"
 }
 
-function resize(path, width, height, format) {
+function resize(path, width, height, composite) {
 
-//export default function(path, width, height, format){
   const readStream = fs.createReadStream(path);
   let transform = sharp(null, { failOnError: false })
     .rotate()
@@ -33,6 +32,10 @@ function resize(path, width, height, format) {
       fit: "inside",
       withoutEnlargement: true
     });
+
+  if(composite){
+    transform = transform.composite([{ input: 'play-button-small.png', gravity: 'northwest' }])
+  }
   
   return readStream.pipe(transform);
 }
@@ -40,22 +43,23 @@ function resize(path, width, height, format) {
 
 app.get('/getThumbnail', function(req, res){
   let {album, filename, width, height, mimetype} = req.query;
+  width = +width || undefined;
+  height = +height || undefined;
 
-//   switch(mimetype.split("/")[0]){
-//     case "image":
-      width = +width || undefined;
-      height = +height || undefined;
+  switch(mimetype.split("/")[0]){
+    case "image":
       
       resize(albums[album]+"/"+filename, width, height).pipe(res);
-//       break;
+      break;
 
-//     case "video":
-//       console.log("TBD video");
-//       break;
+    case "video":
+      
+      resize(".video-thumbnails/"+(album+'/'+filename+'.jpg').replace(/\//gi, '_'), width, height, true).pipe(res);
+      break;
 
-//     case "audio":
-//       console.log("TBD audio")
-//   }
+    case "audio":
+      resize('default-audio-image-4.jpg', width, height).pipe(res);
+   }
 
 });
 
@@ -111,9 +115,9 @@ app.get('/search', function(req, res){
   }
 
   if (req.query.group){
-    orderby = `${req.query.group} desc, filedate`;
+    orderby = `${req.query.group} desc, datetime(filedate)`;
   } else {
-    orderby = `filedate desc`;
+    orderby = `folder desc, datetime(filedate)`;
   }
 
   let stmt = db.prepare(`
@@ -123,7 +127,9 @@ app.get('/search', function(req, res){
     mimetype, aspectratio as aspectRatio, folder
     , date(filedate) filedate
   from meta
-  where mimetype is not null and mimetype like 'image%'
+  where mimetype is not null 
+  and (mimetype like 'image%' or mimetype like 'video%' or mimetype like 'audio%')
+  and mimetype not like '%3gpp' and mimetype not like '%x-ms-wmv'
   and meta match '${filters}'
   order by ${orderby}`);
 

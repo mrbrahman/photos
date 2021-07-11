@@ -80,7 +80,9 @@ html{
           <input class="input is-rounded" type="text" id="search-box" name="search-box" required size="30">
         </div>
         <div class="control">
-          <button class="button is-link is-rounded" id="search-button" onclick="searchClicked()">Search</button>
+          <button class="button is-link is-rounded" id="search-button" onclick="searchClicked()">
+            Huduki
+          </button>
         </div>
       </div>
 
@@ -118,7 +120,7 @@ html{
 
 
 <script src="pig.js"></script>
-<script src="https://d3js.org/d3.v5.min.js"></script>
+<script src="d3.v5.min.js"></script>
 <script src="slideshow.js"></script>
 
 <script>
@@ -127,13 +129,10 @@ var slideshow = photos.slideshow().duration(6).loop(false);
 
 var pigOptions = {
   spaceBetweenImages: 4,
-  //scroller: document.getElementById("content"),
   urlForSize: function(imageData, size) {
-    return `/getThumbnail?album=${imageData.album}&filename=${imageData.filename}&height=${size}`
+    return `/getThumbnail?mimetype=${imageData.mimetype}&album=${imageData.album}&filename=${imageData.filename}&height=${size}`
   },
   onClickHandler: function(d,i,arr) {
-
-    //pig.disable();
 
     slideshow.startFrom(i).autoPlay(false);
     var slideshowDiv = d3.select("#content")

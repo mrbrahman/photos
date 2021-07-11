@@ -25,7 +25,7 @@ photos.slideshow = function(){
 
     state.slideshowItems = slideshowItems;
     state.totalContent = slideshowItems.length-1;
-    state.contentPointer = startFrom-1 || -1;
+    state.contentPointer = startFrom-1;
     state.paused = false;
 
     document.documentElement.classList.add("slideshow-background");
@@ -124,10 +124,40 @@ photos.slideshow = function(){
       .remove()
     ;
 
-    slideshowDiv.append("video")
+    var videoWidth=0, videoHeight=0, topPixels=0, leftPixels=0;
+    {
+      let tmpWidth, tmpHeight;
+      // assume video will occupy full width
+      tmpWidth = screenWidth;
+      tmpHeight = Math.floor(screenWidth/video.aspectRatio);
+
+      if(tmpHeight <= screenHeight){
+        videoWidth = screenWidth;
+        videoHeight = tmpHeight;
+
+        leftPixels = 0;
+        topPixels = Math.floor((screenHeight-videoHeight)/2);
+
+        videoWidth=tmpWidth; videoHeight=tmpHeight;
+      } else {
+        videoHeight = screenHeight;
+        videoWidth = screenHeight*video.aspectRatio;
+
+        topPixels = 0;
+        leftPixels = (screenWidth-videoWidth)/2;
+      }
+
+    }
+
+    var videoDiv = slideshowDiv.append("div")
+      .attr("style", `position: absolute; top: ${topPixels+window.scrollY}px; left: ${leftPixels}px`)
+    ;
+
+    videoDiv.append("video")
       .attr("class", "slideshow-video")
-      .attr("width", document.documentElement.clientWidth)
-      .attr("height", document.documentElement.clientHeight)
+      //.attr("style", "max-width:100%; max-height:100%")
+      .attr("width", videoWidth)
+      .attr("height", videoHeight)
       .on("ended", function(){
         if(autoPlay && !state.paused){
           showContent()
